@@ -1,3 +1,6 @@
+import "dotenv/config.js";
 import { Octokit, App } from "octokit";
 
-console.log("ah");
+
+console.log(process.env.JOYFUN);
+
