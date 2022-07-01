@@ -59,8 +59,16 @@ async function addCommits(commits) {
             {
               type: "text",
               text: {
-                content: `By ${commit.commit.author.name} (${commit.author.login}) on ${commit.commit.author.date}`,
+                content: `By ${commit.commit.author.name} (${commit.author.login}) on `,
               },
+            },
+            {
+              type: "mention",
+              mention: {
+                date: {
+                  start: commit.commit.author.date
+                }
+              }
             },
           ],
         },
