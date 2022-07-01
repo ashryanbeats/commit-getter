@@ -12,8 +12,8 @@ const {
   repo: 'commit-getter'
 });
 
-console.log("Here are the URLs for %s commits:", commits.length);
-commits.map(commit => console.log(`\n${commit.html_url}`));
+console.log("Got URLs for %s GitHub commits.", commits.length);
+// commits.map(commit => console.log(`\n${commit.html_url}`));
 
 async function addCommits(commits) {
   const children = commits.map(commit => {
@@ -30,7 +30,7 @@ async function addCommits(commits) {
     block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
     children
   });
-  console.dir(response, {depth: null});
+  console.log("Created bookmarks for %s GitHub commits in Notion.", response.results.length);
 };
 
 addCommits(commits);
