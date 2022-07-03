@@ -7,6 +7,7 @@ console.log("Got info for %s GitHub commits.", commits.length);
 
 const response = await notionLib.addCommits(commits);
 console.log(
-  "Created bookmarks for %s GitHub commits in Notion.",
-  response.results.length
+  "Created %s blocks for %s GitHub commits in Notion.",
+  response.results.length,
+  commits.length
 );
