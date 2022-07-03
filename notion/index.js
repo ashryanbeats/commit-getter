@@ -64,12 +64,20 @@ async function addCommits(commits) {
     })
     .flat();
 
-  const response = await notion.blocks.children.append({
-    block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
-    children,
-  });
+  try {
+    const response = await notion.blocks.children.append({
+      block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
+      children,
+    });
 
-  return response;
+    return response;
+  } catch (error) {
+    console.error(error);
+    console.log(
+      "===\nError posting data to Notion. Received the above error.\nExiting..."
+    );
+    process.exit(1);
+  }
 }
 
 const notionLib = { notion, addCommits };
