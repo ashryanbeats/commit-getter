@@ -5,7 +5,7 @@ const notion = new Notion({ auth: process.env.NO_SECRET });
 async function addCommits(commits) {
   const children = commits
     .map((commit) => {
-      const user = getUserFromDict(commit.author.login);
+      const user = getUserFromDict(commit);
 
       const paragraph = {
         type: "paragraph",
@@ -52,14 +52,6 @@ async function addCommits(commits) {
               },
             },
             {
-              type: "mention",
-              mention: {
-                user: {
-                  id: user.notionUserId,
-                },
-              },
-            },
-            {
               type: "text",
               text: {
                 content: ` (`,
@@ -92,6 +84,22 @@ async function addCommits(commits) {
           ],
         },
       };
+
+      console.log(user);
+
+      user ? bookmark.bookmark.caption.splice(1, 0, {
+        type: "mention",
+        mention: {
+          user: {
+            id: user.notionUserId,
+          },
+        },
+      }) : bookmark.bookmark.caption.splice(1, 0, {
+        type: "text",
+        text: {
+          content: commit.commit.author.name
+        },
+      });
 
       return [paragraph, bookmark];
     })

@@ -3,8 +3,8 @@ const userDict = JSON.parse(
   await readFile(new URL("../.user-dict.json", import.meta.url))
 );
 
-function getUserFromDict(githubLogin) {
-  return userDict.find((user) => user.githubLogin === githubLogin);
+function getUserFromDict(commit) {
+  return userDict.find((user) => user.githubLogin === commit.author.login);
 }
 
 export { getUserFromDict };
