@@ -1,9 +1,12 @@
 import { Client as Notion } from "@notionhq/client";
+import { getUserFromDict } from "./getUserFromDict.js";
 const notion = new Notion({ auth: process.env.NO_SECRET });
 
 async function addCommits(commits) {
   const children = commits
     .map((commit) => {
+      const user = getUserFromDict(commit.author.login);
+
       const paragraph = {
         type: "paragraph",
         paragraph: {
@@ -45,7 +48,37 @@ async function addCommits(commits) {
             {
               type: "text",
               text: {
-                content: `By ${commit.commit.author.name} (${commit.author.login}) on `,
+                content: `By `,
+              },
+            },
+            {
+              type: "mention",
+              mention: {
+                user: {
+                  id: user.notionUserId,
+                },
+              },
+            },
+            {
+              type: "text",
+              text: {
+                content: ` (`,
+              },
+            },
+            {
+              type: "text",
+              text: {
+                content: `${commit.author.login}`,
+                link: {
+                  type: "url",
+                  url: `${commit.author.html_url}`
+                }
+              },
+            },
+            {
+              type: "text",
+              text: {
+                content: `) on `,
               },
             },
             {
