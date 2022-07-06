@@ -1,6 +1,7 @@
 import { Client as Notion } from "@notionhq/client";
-import { Sema } from "async-sema";
+import { getChildren, archiveChildren, appendChildren } from "./notionApi.js";
 import { getUserFromDict } from "./getUserFromDict.js";
+import { exitWithError } from "../lib/index.js";
 const notion = new Notion({ auth: process.env.NO_SECRET });
 
 async function addCommits(commits) {
@@ -106,57 +107,30 @@ async function addCommits(commits) {
     })
     .flat();
 
-  try {
-    const response = await notion.blocks.children.list({
-      block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
-      page_size: 50,
-    });
+  const [pageChildren, error] = await getChildren(notion);
+  error && exitWithError("Notion", error);
 
-    const targetBlockIdx = response.results.findIndex((block) => {
-      return (
-        block.type === "heading_2" &&
-        block.heading_2.rich_text[0].plain_text === "Docs"
-      );
-    });
-
-    // console.dir(response, {depth: null});
-
-    const s = new Sema(
-      1, // Allow 1 concurrent async calls
-      {
-        capacity: 100 // Prealloc space for 100 tokens
-      }
+  const targetBlockIdx = pageChildren.results.findIndex((block) => {
+    return (
+      block.type === "heading_2" &&
+      block.heading_2.rich_text[0].plain_text === "Docs"
     );
+  });
 
-    const response2 = await Promise.all(response.results.map(async (block) => {
-      await s.acquire()
-      try {
-        console.log(s.nrWaiting() + ' calls to fetch are waiting')
-        // ... do some async stuff with x
-        const deleted = await notion.blocks.delete({ block_id: block.id });
-        return deleted;
-      } finally {
-        s.release();
-      }
-    }));
+  const [archivedChildren, error2] = await archiveChildren(
+    notion,
+    pageChildren
+  );
+  error2 && exitWithError("Notion", error2);
 
-    console.log("Archived %s blocks", response2.length);
+  console.log("Archived %s blocks", archivedChildren.length);
 
-    response.results.splice(targetBlockIdx + 1, 0, ...children);
+  pageChildren.results.splice(targetBlockIdx + 1, 0, ...children);
 
-    const response3 = await notion.blocks.children.append({
-      block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
-      children: response.results,
-    });
+  const [appendedChildren, error3] = await appendChildren(notion, pageChildren);
+  error3 && exitWithError("Notion", error3);
 
-    return response3;
-  } catch (error) {
-    console.error(error);
-    console.log(
-      "===\nError posting data to Notion. Received the above error.\nExiting..."
-    );
-    process.exit(1);
-  }
+  return appendedChildren;
 }
 
 const notionLib = { notion, addCommits };
