@@ -1,4 +1,5 @@
 import { Client as Notion } from "@notionhq/client";
+import { Sema } from "async-sema";
 import { getUserFromDict } from "./getUserFromDict.js";
 const notion = new Notion({ auth: process.env.NO_SECRET });
 
@@ -63,8 +64,8 @@ async function addCommits(commits) {
                 content: `${commit.author.login}`,
                 link: {
                   type: "url",
-                  url: `${commit.author.html_url}`
-                }
+                  url: `${commit.author.html_url}`,
+                },
               },
             },
             {
@@ -85,33 +86,70 @@ async function addCommits(commits) {
         },
       };
 
-      console.log(user);
-
-      user ? bookmark.bookmark.caption.splice(1, 0, {
-        type: "mention",
-        mention: {
-          user: {
-            id: user.notionUserId,
-          },
-        },
-      }) : bookmark.bookmark.caption.splice(1, 0, {
-        type: "text",
-        text: {
-          content: commit.commit.author.name
-        },
-      });
+      user
+        ? bookmark.bookmark.caption.splice(1, 0, {
+            type: "mention",
+            mention: {
+              user: {
+                id: user.notionUserId,
+              },
+            },
+          })
+        : bookmark.bookmark.caption.splice(1, 0, {
+            type: "text",
+            text: {
+              content: commit.commit.author.name,
+            },
+          });
 
       return [paragraph, bookmark];
     })
     .flat();
 
   try {
-    const response = await notion.blocks.children.append({
+    const response = await notion.blocks.children.list({
       block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
-      children,
+      page_size: 50,
     });
 
-    return response;
+    const targetBlockIdx = response.results.findIndex((block) => {
+      return (
+        block.type === "heading_2" &&
+        block.heading_2.rich_text[0].plain_text === "Docs"
+      );
+    });
+
+    // console.dir(response, {depth: null});
+
+    const s = new Sema(
+      1, // Allow 1 concurrent async calls
+      {
+        capacity: 100 // Prealloc space for 100 tokens
+      }
+    );
+
+    const response2 = await Promise.all(response.results.map(async (block) => {
+      await s.acquire()
+      try {
+        console.log(s.nrWaiting() + ' calls to fetch are waiting')
+        // ... do some async stuff with x
+        const deleted = await notion.blocks.delete({ block_id: block.id });
+        return deleted;
+      } finally {
+        s.release();
+      }
+    }));
+
+    console.log("Archived %s blocks", response2.length);
+
+    response.results.splice(targetBlockIdx + 1, 0, ...children);
+
+    const response3 = await notion.blocks.children.append({
+      block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
+      children: response.results,
+    });
+
+    return response3;
   } catch (error) {
     console.error(error);
     console.log(
