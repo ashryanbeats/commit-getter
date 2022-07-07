@@ -100,10 +100,10 @@ const createCommitBookmark = (commit) => {
     },
   };
 
-  return _insertUserMentionOrName(commit, commitBookmark);
+  return insertUserMentionOrName(commit, commitBookmark);
 };
 
-const _insertUserMentionOrName = (commit, commitBookmark) => {
+const insertUserMentionOrName = (commit, commitBookmark) => {
   const user = getUserFromDict(commit);
 
   user
