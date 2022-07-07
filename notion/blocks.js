@@ -1,4 +1,4 @@
-import { getUserFromDict } from "./getUserFromDict.js";
+import { getUserFromDict } from "../lib/index.js";
 
 const createNewChildren = (commits, children) => {
   const commitBlocks = createCommitBlocks(commits);
@@ -6,19 +6,18 @@ const createNewChildren = (commits, children) => {
   children.results.splice(insertIdx, 0, ...commitBlocks);
 
   return children;
-}
+};
 
 const createCommitBlocks = (commits) => {
-  const commitBlocks = commits
-  .map((commit) => {
+  const commitBlocks = commits.map((commit) => {
     const commitPar = createCommitPar(commit);
     const commitBookmark = createCommitBookmark(commit);
 
     return [commitPar, commitBookmark];
-  })
+  });
 
   return commitBlocks.flat();
-}
+};
 
 const createCommitPar = (commit) => {
   return {
@@ -135,7 +134,6 @@ const findInsertIdx = (blocks) => {
   });
 
   return targetBlockIdx + 1;
-}
-
+};
 
 export { createNewChildren };
