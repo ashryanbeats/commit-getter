@@ -3,10 +3,29 @@ import { promiser } from "../lib/index.js";
 
 const s = new Sema(1); // Allow 1 concurrent async call
 
-const getChildren = async (notion) => {
+const getPageList = async (notion, databaseId) => {
+  const pageList = await promiser(
+    notion.databases.query({
+      database_id: databaseId,
+      filter: {
+          and: [{
+            "property": "Status",
+            "select": {
+                "equals": "Drafting"
+            }
+          }
+        ]
+      }
+    })
+  );
+
+  return pageList;
+};
+
+const getChildren = async (notion, blockId) => {
   return await promiser(
     notion.blocks.children.list({
-      block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
+      block_id: blockId,
       page_size: 50,
     })
   );
@@ -36,13 +55,13 @@ const archiveChildren = async (notion, children) => {
   );
 };
 
-const appendChildren = async (notion, children) => {
+const appendChildren = async (notion, pageId, children) => {
   return await promiser(
     notion.blocks.children.append({
-      block_id: process.env.NO_COMMIT_GETTER_PAGE_ID,
+      block_id: pageId,
       children: children.results,
     })
   );
 };
 
-export { getChildren, archiveChildren, appendChildren };
+export { getPageList, getChildren, archiveChildren, appendChildren };

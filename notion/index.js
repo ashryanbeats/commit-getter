@@ -1,12 +1,16 @@
 import { Client as Notion } from "@notionhq/client";
 import { createNewChildren } from "./blocks.js";
-import { getChildren, archiveChildren, appendChildren } from "./notionApi.js";
+import { getPageList, getChildren, archiveChildren, appendChildren } from "./notionApi.js";
 import { exitWithError } from "../lib/index.js";
 const notion = new Notion({ auth: process.env.NO_SECRET });
 
 async function addCommits(commits) {
+  // Find
+  const [pageList, getPageListErr] = await getPageList(notion, process.env.NO_COMMIT_GETTER_DB_ID);
+  getPageListErr && exitWithError("Notion", getPageListErr);
+
   // Read
-  const [children, getErr] = await getChildren(notion);
+  const [children, getErr] = await getChildren(notion, pageList.results[0].id);
   getErr && exitWithError("Notion", getErr);
 
   // Remove
@@ -21,6 +25,7 @@ async function addCommits(commits) {
   const newChildren = createNewChildren(commits, children);
   const [appendedChildren, appendErr] = await appendChildren(
     notion,
+    targetPageId,
     newChildren
   );
   appendErr && exitWithError("Notion", appendErr);
