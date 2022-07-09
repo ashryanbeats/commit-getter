@@ -10,7 +10,8 @@ async function addCommits(commits) {
   getPageListErr && exitWithError("Notion", getPageListErr);
 
   // Read
-  const [children, getErr] = await getChildren(notion, pageList.results[0].id);
+  const targetPageId = pageList.results[0].id
+  const [children, getErr] = await getChildren(notion, targetPageId);
   getErr && exitWithError("Notion", getErr);
 
   // Remove
