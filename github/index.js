@@ -1,4 +1,5 @@
 import { Octokit } from "octokit";
+import { exitWithError } from "../lib/index.js";
 const octokit = new Octokit({ auth: process.env.GH_ACCESS_TOKEN });
 
 async function getCommits(owner, repo, since) {
@@ -11,6 +12,8 @@ async function getCommits(owner, repo, since) {
         since
       }
     );
+
+    if (!commits.length) exitWithError("GitHub", "No commits");
 
     return commits;
   } catch (error) {
