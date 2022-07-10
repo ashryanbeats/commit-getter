@@ -1,5 +1,17 @@
 import { getUserFromDict } from "../lib/index.js";
 
+const createTargetPageDetails = (pageList) => {
+  const targetPage = pageList.results[0];
+
+  const targetPageDetails = {
+    id: targetPage.id,
+    url: targetPage.url,
+    name: targetPage.properties.Name.title[0].text.content
+  }
+
+  return targetPageDetails;
+}
+
 const createNewChildren = (commits, children) => {
   const commitBlocks = createCommitBlocks(commits);
   const insertIdx = findInsertIdx(children);
@@ -136,4 +148,4 @@ const findInsertIdx = (blocks) => {
   return targetBlockIdx + 1;
 };
 
-export { createNewChildren };
+export { createTargetPageDetails, createNewChildren };

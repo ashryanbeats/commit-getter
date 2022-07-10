@@ -8,10 +8,10 @@ const startDate = dateLib.getStartDate(process.argv[2]);
 const commits = await githubLib.getCommits("ashryanbeats", "commit-getter", startDate);
 console.log("Got info for %s GitHub commits.", commits.length);
 
-const _appendedChildren = await notionLib.addCommits(commits);
+const results = await notionLib.addCommits(commits);
 console.log(
-  "Added data for %s GitHub commits in Notion.",
-  commits.length
+  `Added data for ${commits.length} GitHub commits in Notion page "${results.targetPageDetails.name}".`,
 );
+console.log(results.targetPageDetails.url);
 
 process.exit();
